@@ -1,0 +1,22 @@
+# docker files
+compose.yaml
+
+# configuration dirs
+.creds
+.idea
+.vscode
+
+# configuration files
+.env
+.gitignore
+
+# crawlee and apify storage dirs
+apify_storage
+crawlee_storage
+storage
+
+# installtion dirs
+node_modules
+
+# build dirs
+dist

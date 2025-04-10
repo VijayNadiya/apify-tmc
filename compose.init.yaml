@@ -1,0 +1,26 @@
+services:
+  # TODO: Replace this with an actual migration strategy over time.
+  tm-crawler-clickhouse-init:
+    image: clickhouse/clickhouse-server
+    command: >-
+      clickhouse-client
+        -h ${TMC_CLICKHOUSE_HOST:-tm-crawler-clickhouse}
+        -u ${TMC_CLICKHOUSE_USER:-tmc-user}
+        --password ${TMC_CLICKHOUSE_PASSWORD:-1234abcd}
+        --queries-file /usr/local/share/clickhouse/structure.sql
+        --processed-rows
+    volumes:
+      - ./db:/usr/local/share/clickhouse
+    depends_on:
+      tm-crawler-clickhouse:
+        condition: service_healthy
+
+  tm-crawler-s3-init:
+    image: minio/mc
+    command: mb tmc-s3/${TMC_S3_BUCKET:-tm-crawler} --ignore-existing
+    environment:
+      MC_HOST_tmc-s3: >-
+        http://${TMC_MINIO_ROOT_USER:-tmc-user}:${TMC_MINIO_ROOT_PASSWORD:-1234abcd}@${TMC_S3_HOST:-tm-crawler-s3}:${TMC_S3_PORT:-9000}
+    depends_on:
+      tm-crawler-s3:
+        condition: service_healthy

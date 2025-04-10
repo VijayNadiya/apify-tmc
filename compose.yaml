@@ -1,0 +1,74 @@
+# NOTE: This presently provides external resources for the project,
+#       intended for use in development environments, but does not
+#       include the `tm-crawler` runtime itself.
+
+services:
+  tm-crawler-clickhouse:
+    image: clickhouse/clickhouse-server
+    environment:
+      CLICKHOUSE_USER: ${TMC_CLICKHOUSE_USER:-tmc-user}
+      CLICKHOUSE_PASSWORD: ${TMC_CLICKHOUSE_PASSWORD:-1234abcd}
+      CLICKHOUSE_DB: ${TMC_CLICKHOUSE_DB:-tmc_development}
+    volumes:
+      - tm-crawler-clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: wget --spider -q 127.0.0.1:8123/ping
+      start_interval: 2s
+      interval: 30s
+      timeout: 5s
+      retries: 10
+    labels:
+      traefik.enable: true
+      traefik.http.routers.tmc-clickhouse.rule: HostRegexp(`^clickhouse.tmc(\.|$)`)
+
+  tm-crawler-s3:
+    image: minio/minio
+    command: server --console-address ":9001" /data
+    environment:
+      MINIO_BROWSER_REDIRECT_URL: ${TMC_MINIO_BROWSER_REDIRECT_URL:-http://minio.tmc.marquer.me/}
+      MINIO_DOMAIN: ${TMC_MINIO_DOMAIN:-s3.tmc.marquer.me}
+      MINIO_ROOT_USER: ${TMC_MINIO_ROOT_USER:-tmc-user}
+      MINIO_ROOT_PASSWORD: ${TMC_MINIO_ROOT_PASSWORD:-1234abcd}
+    volumes:
+      - tm-crawler-s3-data:/data
+    healthcheck:
+      test: mc ready local
+      start_interval: 2s
+      interval: 30s
+      timeout: 5s
+      retries: 10
+    labels:
+      traefik.enable: true
+      traefik.http.routers.tmc-s3.rule: HostRegexp(`^([\w-]+\.)?s3.tmc(\.|$)`)
+      traefik.http.routers.tmc-s3.service: tmc-s3-service
+      traefik.http.services.tmc-s3-service.loadbalancer.server.port: 9000
+      traefik.http.routers.tmc-minio.rule: HostRegexp(`^minio.tmc(\.|$)`)
+      traefik.http.routers.tmc-minio.service: tmc-minio-service
+      traefik.http.services.tmc-minio-service.loadbalancer.server.port: 9001
+
+  tm-crawler-endpoint:
+    image: traefik:v3.0
+    command: >-
+      --accesslog.format=${TMC_ENDPOINT_ACCESS_LOG_FORMAT:-json}
+      --accesslog=${TMC_ENDPOINT_ACCESS_LOG:-false}
+      --api.insecure=true
+      --entrypoints.web.address=:80
+      --log.level=${TMC_ENDPOINT_LOG_LEVEL:-INFO}
+      --providers.docker.exposedbydefault=false
+      --providers.docker=true
+    ports:
+      - ${TMC_ENDPOINT_PORT_EXPOSED:-80}:80
+      - ${TMC_ENDPOINT_UI_PORT_EXPOSED:-8080}:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      replicas: ${TMC_ENDPOINT_INSTANCES:-1}
+
+volumes:
+  tm-crawler-clickhouse-data:
+  tm-crawler-s3-data:
+
+networks:
+  default:
+    name: m_services
+    external: true
