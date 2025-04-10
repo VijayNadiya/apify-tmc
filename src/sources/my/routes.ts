@@ -1,18 +1,18 @@
 import { createPlaywrightRouter } from "crawlee";
 import { format as formatDate } from "date-fns";
-import { Locator } from "playwright";
+import type { Locator } from "playwright";
 import { saveMark } from "../../sinks/clickhouse.js";
 import { putContentHtml, putScreenshotPng } from "../../sinks/contrail.js";
 import { ResponseTimeoutError } from "../../types/errors.js";
 import {
-  Classification,
-  History,
-  IMarkScrape,
+  type Classification,
+  type History,
+  type IMarkScrape,
   Mark,
-  MarkEvent,
+  type MarkEvent,
   MarkFeature,
 } from "../../types/mark.js";
-import { Navigation } from "../../types/navigation.js";
+import type { Navigation } from "../../types/navigation.js";
 import {
   endNavigationAsSuccess,
   normalizeText,
@@ -215,7 +215,7 @@ router.addDefaultHandler(async ({ request, page, log, crawler }) => {
     throw new Error("Failed to parse total result count for search.");
   }
 
-  const lastNumber = Number(parseInt(itemsCountMatch[0]));
+  const lastNumber = Number(Number.parseInt(itemsCountMatch[0]));
   // last page number found and getting ids
   const totalPages = Number(Math.floor(lastNumber / 50));
 

@@ -13,6 +13,7 @@
     "date-fns": "^2.30.0",
     "playwright": "*",
     "tldts": "^6.0.21",
+    "ts-command-line-args": "^2.5.1",
     "ulid": "^2.3.0"
   },
   "devDependencies": {
@@ -28,7 +29,7 @@
   "scripts": {
     "start": "npm run start:dev",
     "start:prod": "node dist/main.js",
-    "start:dev": "node --env-file=.env --no-warnings=ExperimentalWarning --loader=ts-node/esm/transpile-only src/scripts/extractMarksForDms.ts",
+    "start:dev": "node --env-file=.env --no-warnings=ExperimentalWarning --loader=ts-node/esm/transpile-only src/scripts/collectMarksFromMy.ts",
     "build": "tsc",
     "collect-marks-my": "node --env-file=.env --no-warnings=ExperimentalWarning --loader=ts-node/esm/transpile-only src/scripts/collectMarksFromMy.ts",
     "collect-tmview-coverages": "node --env-file=.env --no-warnings=ExperimentalWarning --loader=ts-node/esm/transpile-only src/scripts/collectTmviewCoverages.ts",
